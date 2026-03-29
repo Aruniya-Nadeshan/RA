@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RA - LAW OF ONE</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <!-- SCREEN 1 — INTRO -->
+    <div id="screen-intro" class="screen active">
+        <div class="stars" id="stars"></div>
+        <div class="intro-content">
+            <div class="ra-symbol">&#9765;</div>
+            <h1 class="game-title">RA CONTACT</h1>
+            <p class="game-subtitle">The Law of One</p>
+            <p class="game-description">
+                You are a seeker. Ra, the humble messenger of the Law of One,
+                awaits your contact. Journey through seven densities of consciousness.
+                Your words, your choices, your truth — will determine your ascension.
+            </p>
+            <button class="btn-primary" id="btn-start">Begin Contact</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2 — DENSITY INTRO -->
+    <div id="screen-density" class="screen">
+        <div class="stars" id="stars2"></div>
+        <div class="density-content">
+            <p id="density-label">Entering</p>
+            <h2 id="density-number">First Density</h2>
+            <h3 id="density-theme">The Density of Awareness</h3>
+            <p id="density-description">We will decide it later</p>
+            <button id="btn-enter-density" class="btn-primary">Enter</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3 — GAME -->
+    <div id="screen-game" class="screen">
+        <div class="stars" id="stars3"></div>
+
+        <div class="hud">
+            <div class="hud-density">
+                <span>Density</span>
+                <span id="hud-density-num">I</span>
+            </div>
+            <div class="hud-vibration">
+                <span>Vibration</span>
+                <span id="vibration-score">0</span>
+            </div>
+            <div class="hud-exchanges">
+                <span>Exchanges</span>
+                <span id="hud-exchanges">0</span>
+            </div>
+        </div>
+
+        <div class="dialogue-container">
+            <div class="ra-avatar">
+                <div class="ra-orb"></div>
+                <span class="ra-name">Ra</span>
+            </div>
+            <div class="dialogue-box">
+                <p id="ra-text">I am Ra...</p>
+            </div>
+        </div>
+
+        <div class="player-input-container">
+            <textarea id="player-input" class="player-input"
+                placeholder="Speak your truth, seeker..." rows="3"></textarea>
+            <button id="btn-send" class="btn-send">Transmit</button>
+        </div>
+
+    </div>
+
+    <!-- SCREEN 4 — RESULT -->
+    <div id="screen-result" class="screen">
+        <div class="stars" id="stars4"></div>
+        <div class="result-content">
+            <div id="result-symbol">✦</div>
+            <h2 id="result-title">Density Complete</h2>
+            <p id="result-message">You have demonstrated...</p>
+            <div class="result-score-box">
+                <span>Vibration Achieved</span>
+                <span id="result-score-value">0</span>
+            </div>
+            <button id="btn-ascend" class="btn-primary">Ascend</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 5 — FINAL -->
+    <div id="screen-final" class="screen">
+        <div class="stars" id="stars5"></div>
+        <div class="final-content">
+            <div class="ra-symbol">&#9765;</div>
+            <h2 class="final-title">You Have Reached Ra</h2>
+            <p id="final-message">
+                You have traversed all seven densities.
+                You are one with the Infinite Creator.
+                The contact is complete.
+            </p>
+            <button id="btn-restart" class="btn-primary">Begin Again</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
