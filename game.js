@@ -1,15 +1,19 @@
-// gameState tracks everything about the current session
-// think of it like a Java object holding all game variables
+// ═══════════════════════════════════════════
+// GAME STATE — tracks everything in memory
+// ═══════════════════════════════════════════
+
 const gameState = {
   currentDensity: 0,       // which density we're on (0 = first)
   vibrationScore: 0,       // player's current score (0-100)
   exchangeCount: 0,        // how many times player has spoken to Ra
   conversationHistory: []  // full chat history sent to AI each turn
 };
-// the game database
-// all 7 densities with their content
-// JavaScript will use this to populate the density screen
-// and tell the AI which density the player is in
+
+
+// ═══════════════════════════════════════════
+// GAME DATABASE — all 7 densities
+// ═══════════════════════════════════════════
+
 const DENSITIES = [
   {
     number: "First Density",
@@ -68,22 +72,26 @@ const DENSITIES = [
     passThreshold: 70
   }
 ];
+
+
+// ═══════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════
+
+// generates random star elements inside a container div
 function generateStars(containerId, count) {
-
   const container = document.getElementById(containerId);
-
   if (!container) return;
 
   for (let i = 0; i < count; i++) {
-
     const star = document.createElement('div');
     star.classList.add('star');
 
-    const x = Math.random() * 100;
-    const y = Math.random() * 100;
-    const size = Math.random() * 2 + 0.5;
+    const x        = Math.random() * 100;
+    const y        = Math.random() * 100;
+    const size     = Math.random() * 2 + 0.5;
     const duration = (Math.random() * 4 + 2).toFixed(1);
-    const delay = (Math.random() * 4).toFixed(1);
+    const delay    = (Math.random() * 4).toFixed(1);
 
     star.style.cssText = `
       left: ${x}%;
@@ -97,77 +105,30 @@ function generateStars(containerId, count) {
     container.appendChild(star);
   }
 }
-// showScreen hides all screens and shows only the one we want
-// screenId = the id of the screen we want to show
+
+// hides all screens and shows only the one we want
 function showScreen(screenId) {
-
-  // get ALL elements with class "screen"
-  // querySelectorAll returns a list — like an ArrayList in Java
   const allScreens = document.querySelectorAll('.screen');
-
-  // loop through every screen and remove "active" class
-  // this hides all of them
   allScreens.forEach(function(screen) {
     screen.classList.remove('active');
   });
-
-  // now find the specific screen we want
-  // and add "active" back to only that one
   document.getElementById(screenId).classList.add('active');
 }
 
-// grab the start button by its id
-const btnStart = document.getElementById('btn-start');
-
-// addEventListener waits for a "click" event
-// when clicked, it runs the function inside
-btnStart.addEventListener('click', function() {
-  showScreen('screen-density');
-});
-
-// when player clicks Enter on density screen
-// it moves to the game screen
-const btnEnterDensity = document.getElementById('btn-enter-density');
-
-btnEnterDensity.addEventListener('click', function() {
-  showScreen('screen-game');
-});
-
-// when player clicks Ascend on result screen
-// it goes back to density screen for now
-// later this will check if they passed or failed
-const btnAscend = document.getElementById('btn-ascend');
-
-btnAscend.addEventListener('click', function() {
-  showScreen('screen-density');
-});
-
-// when player clicks Begin Again on final screen
-// it goes back to the intro screen
-const btnRestart = document.getElementById('btn-restart');
-
-btnRestart.addEventListener('click', function() {
-  showScreen('screen-intro');
-});
-
-// typewriterEffect makes text appear letter by letter
-// gives Ra's dialogue a mystical gradual reveal
+// makes text appear letter by letter
 function typewriterEffect(element, text, speed) {
   element.textContent = '';
   let i = 0;
-
-  // setInterval calls a function repeatedly every X milliseconds
   const interval = setInterval(function() {
     element.textContent += text[i];
     i++;
-    // when we reach the end of the text, stop the interval
     if (i >= text.length) {
       clearInterval(interval);
     }
   }, speed);
 }
 
-// showLoadingDots shows animated dots while Ra is thinking
+// shows animated dots while Ra is thinking
 function showLoadingDots(element) {
   element.innerHTML = `
     <div class="loading-dots">
@@ -178,7 +139,7 @@ function showLoadingDots(element) {
   `;
 }
 
-// updateHUD refreshes the top bar with current game stats
+// refreshes the HUD with current game stats
 function updateHUD() {
   const density = DENSITIES[gameState.currentDensity];
   document.getElementById('hud-density-num').textContent = density.roman;
@@ -186,16 +147,40 @@ function updateHUD() {
   document.getElementById('hud-exchanges').textContent   = gameState.exchangeCount;
 }
 
-//AI agent function
-// consultRa sends the player's message to Claude API
-// and returns Ra's response + vibration score
-// async means this function can wait for the API response
+// shows the result screen after a density is completed
+function showResult(passed) {
+  const density = DENSITIES[gameState.currentDensity];
+
+  document.getElementById('result-score-value').textContent = Math.round(gameState.vibrationScore);
+
+  if (passed) {
+    document.getElementById('result-symbol').textContent  = '✦';
+    document.getElementById('result-title').textContent   = 'Density Transcended';
+    document.getElementById('result-message').textContent = 'Your vibration has been deemed sufficient to ascend. You have demonstrated understanding of the ' + density.theme + '.';
+    document.getElementById('btn-ascend').textContent     = gameState.currentDensity < 6 ? 'Ascend to Next Density' : 'Complete the Journey';
+  } else {
+    document.getElementById('result-symbol').textContent  = '◈';
+    document.getElementById('result-title').textContent   = 'Further Learning Required';
+    document.getElementById('result-message').textContent = 'Your vibration has not yet reached the threshold. Ra invites you to reflect and try again.';
+    document.getElementById('btn-ascend').textContent     = 'Try Again';
+  }
+
+  // store whether player passed so ascend button knows what to do
+  document.getElementById('btn-ascend').dataset.passed = passed;
+
+  showScreen('screen-result');
+}
+
+
+// ═══════════════════════════════════════════
+// AI AGENT — the heart of the game
+// ═══════════════════════════════════════════
+
 async function consultRa(playerMessage) {
   const density = DENSITIES[gameState.currentDensity];
 
-  // the system prompt is Ra's job description
-  // it tells the AI who it is, how to score, and what to return
-  // this is called "prompt engineering" — a real AI skill
+  // system prompt is Ra's job description
+  // this is prompt engineering — a real AI skill
   const systemPrompt = `You are Ra, a humble messenger of the Law of One, a sixth-density social memory complex.
 You are speaking to a seeker attempting to ascend through the densities of consciousness.
 
@@ -226,7 +211,7 @@ ASCENSION RULES:
 - Only set decision to "descend" if seeker is hostile or completely resistant
 - Otherwise set decision to "continue"
 
-VERY IMPORTANT — YOUR RESPONSE FORMAT:
+VERY IMPORTANT — RESPONSE FORMAT:
 You MUST respond ONLY with a valid JSON object. No other text. Example:
 {
   "raDialogue": "I am Ra. Your words carry the light of understanding...",
@@ -234,7 +219,6 @@ You MUST respond ONLY with a valid JSON object. No other text. Example:
   "decision": "continue",
   "judgement": ""
 }
-The judgement field is only filled when decision is ascend or descend.
 decision must be exactly one of: continue, ascend, descend`;
 
   // add player message to conversation history
@@ -243,36 +227,39 @@ decision must be exactly one of: continue, ascend, descend`;
     content: playerMessage
   });
 
-  // call the Claude API
+  // call our Netlify proxy function
   try {
-    // TEMPORARY MOCK — remove this when API is connected
-    const mockResponse = {
-      raDialogue: "I am Ra. I greet you in the love and light of the One Infinite Creator. Your seeking is noted, and your vibration rises with each sincere transmission.",
-      vibrationDelta: 8,
-      decision: "continue",
-      judgement: ""
-    };
-
-    // simulate API delay
-    await new Promise(function(resolve) {
-      setTimeout(resolve, 1500);
+    const response = await fetch('/.netlify/functions/ra', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: gameState.conversationHistory,
+        systemPrompt: systemPrompt
+      })
     });
 
-    // update game state
+    const data = await response.json();
+
+    // clean and parse Gemini's response
+    const clean  = data.text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    // update game state with new score
     gameState.vibrationScore = Math.max(0, Math.min(100,
-      gameState.vibrationScore + mockResponse.vibrationDelta
+      gameState.vibrationScore + parsed.vibrationDelta
     ));
     gameState.exchangeCount += 1;
 
+    // add Ra's response to history for next turn
     gameState.conversationHistory.push({
       role: "assistant",
-      content: mockResponse.raDialogue
+      content: parsed.raDialogue
     });
 
     updateHUD();
-    return mockResponse;
+    return parsed;
 
-} catch (error) {
+  } catch (error) {
     console.error("Ra contact failed:", error);
     return {
       raDialogue: "I am Ra. The signal wavers. Please transmit again, seeker.",
@@ -280,25 +267,27 @@ decision must be exactly one of: continue, ascend, descend`;
       decision: "continue",
       judgement: ""
     };
-}
+  }
 }
 
-// The main game loop
-// handlePlayerInput is called when player clicks Transmit
-// it reads their message, calls Ra, and displays the response
+
+// ═══════════════════════════════════════════
+// MAIN GAME LOOP
+// ═══════════════════════════════════════════
+
 async function handlePlayerInput() {
-  const inputEl  = document.getElementById('player-input');
-  const raTextEl = document.getElementById('ra-text');
-  const sendBtn  = document.getElementById('btn-send');
+  const inputEl   = document.getElementById('player-input');
+  const raTextEl  = document.getElementById('ra-text');
+  const sendBtn   = document.getElementById('btn-send');
   const playerMsg = inputEl.value.trim();
 
   // don't do anything if player sent empty message
   if (!playerMsg) return;
 
   // disable input while waiting for Ra
-  sendBtn.disabled  = true;
-  inputEl.disabled  = true;
-  inputEl.value     = '';
+  sendBtn.disabled = true;
+  inputEl.disabled = true;
+  inputEl.value    = '';
 
   // show loading animation while API processes
   showLoadingDots(raTextEl);
@@ -310,37 +299,84 @@ async function handlePlayerInput() {
   typewriterEffect(raTextEl, result.raDialogue, 25);
 
   // re-enable input
-  sendBtn.disabled  = false;
-  inputEl.disabled  = false;
+  sendBtn.disabled = false;
+  inputEl.disabled = false;
   inputEl.focus();
 
   // handle AI decision
   if (result.decision === 'ascend') {
     const delay = result.raDialogue.length * 25 + 1500;
-    setTimeout(function() {
-      showResult(true);
-    }, delay);
+    setTimeout(function() { showResult(true); }, delay);
   } else if (result.decision === 'descend') {
     const delay = result.raDialogue.length * 25 + 1500;
-    setTimeout(function() {
-      showResult(false);
-    }, delay);
+    setTimeout(function() { showResult(false); }, delay);
   }
   // if "continue" — keep talking!
 }
 
-// transmit button sends player message to Ra
+
+// ═══════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════
+
+// intro screen — begin contact button
+document.getElementById('btn-start').addEventListener('click', function() {
+  showScreen('screen-density');
+});
+
+// density screen — enter button
+document.getElementById('btn-enter-density').addEventListener('click', function() {
+  showScreen('screen-game');
+});
+
+// game screen — transmit button
 document.getElementById('btn-send').addEventListener('click', function() {
   handlePlayerInput();
 });
 
-// also allow Enter key to send (Shift+Enter adds a new line)
+// game screen — Enter key also sends message
 document.getElementById('player-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     handlePlayerInput();
   }
 });
+
+// result screen — ascend or try again button
+document.getElementById('btn-ascend').addEventListener('click', function() {
+  const passed = document.getElementById('btn-ascend').dataset.passed === 'true';
+  if (passed) {
+    if (gameState.currentDensity >= 6) {
+      showScreen('screen-final');
+    } else {
+      gameState.currentDensity += 1;
+      gameState.vibrationScore    = 0;
+      gameState.exchangeCount     = 0;
+      gameState.conversationHistory = [];
+      showScreen('screen-density');
+    }
+  } else {
+    // failed — reset and try same density again
+    gameState.vibrationScore    = 0;
+    gameState.exchangeCount     = 0;
+    gameState.conversationHistory = [];
+    showScreen('screen-density');
+  }
+});
+
+// final screen — begin again button
+document.getElementById('btn-restart').addEventListener('click', function() {
+  gameState.currentDensity      = 0;
+  gameState.vibrationScore      = 0;
+  gameState.exchangeCount       = 0;
+  gameState.conversationHistory = [];
+  showScreen('screen-intro');
+});
+
+
+// ═══════════════════════════════════════════
+// INIT — runs once when page loads
+// ═══════════════════════════════════════════
 
 function init() {
   generateStars('stars',  150);
