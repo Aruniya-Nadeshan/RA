@@ -60,8 +60,4 @@ exports.handler = async function(event) {
     };
   }
 };
-```
 
-Commit with message:
-```
-Fix syntax error in ra function
