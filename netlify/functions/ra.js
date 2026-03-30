@@ -1,4 +1,4 @@
-const handler = async function(event) {
+exports.handler = async function(event) {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -60,10 +60,8 @@ const handler = async function(event) {
     };
   }
 };
-
-module.exports = { handler };
 ```
 
 Commit with message:
 ```
-Fix handler export style
+Fix syntax error in ra function
