@@ -229,7 +229,7 @@ decision must be exactly one of: continue, ascend, descend`;
 
   // call our Netlify proxy function
   try {
-    const response = await fetch('/.netlify/functions/ra', {
+    const response = await fetch('/api/ra', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
